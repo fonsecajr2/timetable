@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% block body %}
+<h2>{{ ent.title }}</h2>
+
+<h3>{{ 'Edit' if editing else 'Add new' }}</h3>
+<form method="post" action="{{ url_for('admin.edit', name=name, oid=editing.id) if editing else url_for('admin.manage', name=name) }}" class="f">
+ {% for f in fields %}
+  <label>{{ f.label }}
+   {% set cur = (editing[f.name] if editing else '') %}
+   {% if f.kind in ('select', 'select_int') %}
+    <select name="{{ f.name }}">
+     {% for v, label in f.options %}<option value="{{ v }}" {{ 'selected' if editing and cur|string == v|string }}>{{ label }}</option>{% endfor %}
+    </select>
+    {% if not f.options %}<small>(add some {{ 'courses' if f.name == 'course_id' else 'faculty' if f.name == 'faculty_id' else 'time slots' }} first)</small>{% endif %}
+   {% else %}
+    <input name="{{ f.name }}" value="{{ cur if cur is not none }}" {{ 'required' if f.required }}>
+   {% endif %}
+  </label>
+ {% endfor %}
+ <button>{{ 'Save' if editing else 'Add' }}</button>
+ {% if editing %}<a href="{{ url_for('admin.manage', name=name) }}">Cancel</a>{% endif %}
+</form>
+
+{% if name == 'slots' %}
+<form method="post" action="{{ url_for('admin.default_slots') }}" style="margin:1rem 0">
+ <button>Add default slots (Mon-Fri, 6 periods)</button>
+</form>
+{% endif %}
+
+<h3>{{ rows|length }} record(s)</h3>
+<table>
+ <tr>{% for label, _ in ent.columns %}<th>{{ label }}</th>{% endfor %}<th></th></tr>
+ {% for r in rows %}<tr>
+  {% for _, get in ent.columns %}<td>{{ get(r) }}</td>{% endfor %}
+  <td>
+   <a href="{{ url_for('admin.edit', name=name, oid=r.id) }}">Edit</a>
+   <form method="post" action="{{ url_for('admin.delete', name=name, oid=r.id) }}" style="display:inline" onsubmit="return confirm('Delete this record?')"><button>Delete</button></form>
+  </td></tr>{% endfor %}
+</table>
+{% endblock %}

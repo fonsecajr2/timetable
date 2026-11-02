@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block body %}
+<h2>Weekly Timetable</h2>
+{% if not grid %}<p>No timetable yet.{% if current_user.role == 'admin' %} Add courses, faculty, rooms, time slots and sections under <b>Setup</b>, then press <b>Generate</b>.{% else %} It has not been published yet.{% endif %}</p>{% endif %}
+<table><tr><th>Period</th>{% for d in days %}<th>{{ d }}</th>{% endfor %}</tr>
+{% for p in periods %}<tr><th>P{{ p }}</th>
+ {% for d in range(days|length) %}<td>
+  {% for a in grid.get((p, d), []) %}
+   <div><b>{{ a.section.course.code }}</b> {{ a.section.group_name }}<br>{{ a.section.faculty.name }} · {{ a.room.name }}</div>
+  {% endfor %}</td>{% endfor %}</tr>{% endfor %}
+</table>{% endblock %}

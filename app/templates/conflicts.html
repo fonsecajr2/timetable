@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block body %}
+<h2>Conflict report</h2>
+{% if not conflicts %}<p>No conflicts found.</p>{% else %}
+<ul>{% for c in conflicts %}<li><b>{{ c.type }}</b>: {{ c.detail }}</li>{% endfor %}</ul>{% endif %}
+{% endblock %}

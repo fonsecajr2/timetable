@@ -1,0 +1,25 @@
+<!doctype html>
+<title>Timetable System</title>
+<style>
+ body{font-family:system-ui,sans-serif;margin:2rem;color:#222}
+ table{border-collapse:collapse;width:100%} td,th{border:1px solid #ccc;padding:6px;vertical-align:top;font-size:.85rem}
+ th{background:#f3f3f3} nav a,nav button{margin-right:1rem}
+ form.f{display:flex;flex-wrap:wrap;gap:1rem;align-items:end;margin-bottom:1rem}
+ form.f label{display:flex;flex-direction:column;font-size:.85rem} .setup{margin:.5rem 0;font-size:.9rem}
+</style>
+<nav>
+ {% if current_user.is_authenticated %}
+  <a href="{{ url_for('main.index') }}">Timetable</a>
+  {% if current_user.role == 'admin' %}<a href="{{ url_for('main.conflicts') }}">Conflicts</a>
+   <form method="post" action="{{ url_for('main.generate') }}" style="display:inline"><button>Generate</button></form>
+   <form method="post" action="{{ url_for('main.publish') }}" style="display:inline"><button>Publish</button></form>{% endif %}
+  <a href="{{ url_for('main.logout') }}">Logout ({{ current_user.username }})</a>
+ {% endif %}
+</nav>
+{% if current_user.is_authenticated and current_user.role == 'admin' %}
+<div class="setup"><b>Setup:</b>
+ {% for key, label in [('courses','Courses'),('faculty','Faculty'),('rooms','Rooms'),('slots','Time slots'),('sections','Sections'),('availability','Faculty availability')] %}
+  <a href="{{ url_for('admin.manage', name=key) }}">{{ label }}</a>{% endfor %}
+</div>{% endif %}<hr>
+{% for m in get_flashed_messages() %}<p><b>{{ m }}</b></p>{% endfor %}
+{% block body %}{% endblock %}
