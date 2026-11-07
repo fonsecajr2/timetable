@@ -1,11 +1,10 @@
-"""Admin setup screens: add / edit / delete courses, faculty, rooms, slots, sections, availability."""
+"""Admin setup screens: add / edit / delete courses, faculty, rooms, slots, groups, sections, availability."""
 import re
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from sqlalchemy.exc import IntegrityError
 
 from .extensions import db
-# imports: add Student, StudentGroup
 from .models import (DAYS, Allocation, Course, Faculty, FacultyUnavailability, Room,
                      Section, Student, StudentGroup, TimeSlot)
 from .routes import role_required
@@ -17,16 +16,17 @@ DEFAULT_PERIODS = [("09:00", "09:55"), ("10:00", "10:55"), ("11:15", "12:10"),
                    ("12:15", "13:10"), ("14:00", "14:55"), ("15:00", "15:55")]
 
 
-def _groups():
-    return [(g.id, f"{g.name} ({g.strength} students)")
-            for g in StudentGroup.query.order_by(StudentGroup.name)]
-
 def _courses():
     return [(c.id, f"{c.code} - {c.name}") for c in Course.query.order_by(Course.code)]
 
 
 def _faculty():
     return [(f.id, f.name) for f in Faculty.query.order_by(Faculty.name)]
+
+
+def _groups():
+    return [(g.id, f"{g.name} ({g.strength} students)")
+            for g in StudentGroup.query.order_by(StudentGroup.name)]
 
 
 def _slots():
@@ -51,7 +51,8 @@ ENTITIES = {
     "faculty": dict(
         model=Faculty, title="Faculty", order=Faculty.name,
         fields=[F("name", "Name"), F("email", "Email", required=False)],
-        columns=[("Name", lambda o: o.name), ("Email", lambda o: o.email or "")],
+        columns=[("Name", lambda o: o.name), ("Email", lambda o: o.email or ""),
+                 ("Login", lambda o: o.user.username if o.user else "-")],
         deps=[(Section, "faculty_id"), (FacultyUnavailability, "faculty_id")]),
     "rooms": dict(
         model=Room, title="Rooms", order=Room.name,
@@ -68,12 +69,16 @@ ENTITIES = {
         columns=[("Day", lambda o: DAYS[o.day]), ("Period", lambda o: o.period),
                  ("Start", lambda o: o.start), ("End", lambda o: o.end)],
         deps=[(Allocation, "slot_id"), (FacultyUnavailability, "slot_id")]),
+    "groups": dict(
+        model=StudentGroup, title="Student groups", order=StudentGroup.name,
+        fields=[F("name", "Group name (e.g. CSE-3A)"), F("strength", "Number of students", "int")],
+        columns=[("Group", lambda o: o.name), ("Students", lambda o: o.strength)],
+        deps=[(Section, "group_id"), (Student, "group_id")]),
     "sections": dict(
         model=Section, title="Sections (class offerings)", order=Section.id,
         fields=[F("course_id", "Course", "select_int", _courses),
                 F("faculty_id", "Faculty", "select_int", _faculty),
-                F("group_id", "Student group", "select_int", _groups),
-                F("strength", "Number of students", "int")],
+                F("group_id", "Student group", "select_int", _groups)],
         columns=[("Course", lambda o: f"{o.course.code} - {o.course.name}"),
                  ("Faculty", lambda o: o.faculty.name), ("Group", lambda o: o.group_name),
                  ("Students", lambda o: o.strength)],
@@ -85,13 +90,8 @@ ENTITIES = {
         columns=[("Faculty", lambda o: db.session.get(Faculty, o.faculty_id).name),
                  ("Slot", lambda o: db.session.get(TimeSlot, o.slot_id).label)],
         deps=[]),
-        # new entity in ENTITIES
-    "groups": dict(
-        model=StudentGroup, title="Student groups", order=StudentGroup.name,
-        fields=[F("name", "Group name (e.g. CSE-3A)"), F("strength", "Number of students", "int")],
-        columns=[("Group", lambda o: o.name), ("Students", lambda o: o.strength)],
-        deps=[(Section, "group_id"), (Student, "group_id")]),
-  }
+}
+
 
 def _entity(name):
     ent = ENTITIES.get(name)
