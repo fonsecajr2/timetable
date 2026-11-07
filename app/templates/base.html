@@ -8,13 +8,11 @@
  form.f label{display:flex;flex-direction:column;font-size:.85rem} .setup{margin:.5rem 0;font-size:.9rem}
 </style>
 <nav>
- {% if current_user.is_authenticated %}
-  <a href="{{ url_for('main.index') }}">Timetable</a>
-  {% if current_user.role == 'admin' %}<a href="{{ url_for('main.conflicts') }}">Conflicts</a>
-   <form method="post" action="{{ url_for('main.generate') }}" style="display:inline"><button>Generate</button></form>
-   <form method="post" action="{{ url_for('main.publish') }}" style="display:inline"><button>Publish</button></form>{% endif %}
-  <a href="{{ url_for('main.logout') }}">Logout ({{ current_user.username }})</a>
- {% endif %}
+  {% if current_user.is_authenticated %}
+    {% if current_user.role == 'admin' %}<a href="{{ url_for('main.people') }}">People</a>
+    {% else %}<a href="{{ url_for('main.my_timetable') }}">My timetable</a>{% endif %}
+    <a href="{{ url_for('main.room_timetable') }}">Rooms</a>
+  {% endif %}
 </nav>
 {% if current_user.is_authenticated and current_user.role == 'admin' %}
 <div class="setup"><b>Setup:</b>

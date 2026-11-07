@@ -1,0 +1,98 @@
+{% extends "base.html" %}{% block body %}
+<h2>People and logins</h2>
+<p><small>Leave username and password empty to register someone without a login; you can create it later from the tables
+    below.</small></p>
+
+<h3>Register faculty</h3>
+<form method="post" action="{{ url_for('main.add_faculty') }}" class="f">
+  <label>Name <input name="name" required></label>
+  <label>Email <input name="email"></label>
+  <label>Username <input name="username" autocomplete="off"></label>
+  <label>Password <input name="password" type="password" autocomplete="new-password"></label>
+  <button>Add faculty</button>
+</form>
+
+<h3>Register student</h3>
+{% if not groups %}<p>No student groups yet. Add one under Setup &rarr; Groups first.</p>{% else %}
+<form method="post" action="{{ url_for('main.add_student') }}" class="f">
+  <label>Name <input name="name" required></label>
+  <label>Roll number <input name="roll_no" required></label>
+  <label>Group
+    <select name="group_id">{% for g in groups %}<option value="{{ g.id }}">{{ g.name }}</option>{% endfor %}</select>
+  </label>
+  <label>Username <input name="username" autocomplete="off"></label>
+  <label>Password <input name="password" type="password" autocomplete="new-password"></label>
+  <button>Add student</button>
+</form>
+{% endif %}
+
+<h3>Add admin account</h3>
+<form method="post" action="{{ url_for('main.add_admin') }}" class="f">
+  <label>Username <input name="username" required autocomplete="off"></label>
+  <label>Password <input name="password" type="password" required autocomplete="new-password"></label>
+  <button>Add admin</button>
+</form>
+
+<h3>Faculty ({{ faculty|length }})</h3>
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Email</th>
+    <th>Login</th>
+  </tr>
+  {% for f in faculty %}<tr>
+    <td>{{ f.name }}</td>
+    <td>{{ f.email or '' }}</td>
+    <td>
+      {% if f.user %}{{ f.user.username }}{% else %}
+      <form method="post" action="{{ url_for('main.add_login', kind='faculty', pid=f.id) }}" style="display:inline">
+        <input name="username" placeholder="username" required autocomplete="off">
+        <input name="password" type="password" placeholder="password" required autocomplete="new-password">
+        <button>Create login</button>
+      </form>{% endif %}
+    </td>
+  </tr>{% endfor %}
+</table>
+
+<h3>Students ({{ students|length }})</h3>
+<table>
+  <tr>
+    <th>Roll no</th>
+    <th>Name</th>
+    <th>Group</th>
+    <th>Login</th>
+  </tr>
+  {% for s in students %}<tr>
+    <td>{{ s.roll_no }}</td>
+    <td>{{ s.name }}</td>
+    <td>{{ s.group.name }}</td>
+    <td>
+      {% if s.user %}{{ s.user.username }}{% else %}
+      <form method="post" action="{{ url_for('main.add_login', kind='student', pid=s.id) }}" style="display:inline">
+        <input name="username" placeholder="username" required autocomplete="off">
+        <input name="password" type="password" placeholder="password" required autocomplete="new-password">
+        <button>Create login</button>
+      </form>{% endif %}
+    </td>
+  </tr>{% endfor %}
+</table>
+
+<h3>All logins ({{ users|length }})</h3>
+<table>
+  <tr>
+    <th>Username</th>
+    <th>Role</th>
+    <th>Set new password</th>
+  </tr>
+  {% for u in users %}<tr>
+    <td>{{ u.username }}</td>
+    <td>{{ u.role }}</td>
+    <td>
+      <form method="post" action="{{ url_for('main.reset_password', uid=u.id) }}" style="display:inline">
+        <input name="password" type="password" placeholder="new password" required autocomplete="new-password">
+        <button>Change</button>
+      </form>
+    </td>
+  </tr>{% endfor %}
+</table>
+{% endblock %}

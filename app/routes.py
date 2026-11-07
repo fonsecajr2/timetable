@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 
 from .extensions import db
 from .models import (DAYS, Allocation, Faculty, FacultyUnavailability, Room, Section, Student,
-                     TimeSlot, User)
+                     StudentGroup, TimeSlot, User)
 from .scheduler import check_move, find_conflicts, generate_timetable
 
 bp = Blueprint("main", __name__)
@@ -218,3 +218,124 @@ def publish():
     db.session.commit()
     flash("Timetable published")
     return redirect(url_for("main.index"))
+
+
+# ------------------------------------------------------- people and logins (admin)
+def _make_user(username, password, role):
+    """Create a login. Raises ValueError with a message the admin can read."""
+    username, password = (username or "").strip(), password or ""
+    if not username or not password:
+        raise ValueError("Username and password are both required for a login.")
+    if len(password) < 6:
+        raise ValueError("Password must be at least 6 characters.")
+    if User.query.filter_by(username=username).first():
+        raise ValueError(f"The username '{username}' is already taken.")
+    user = User(username=username, role=role)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.flush()
+    return user
+
+
+def _wants_login(form):
+    """Both blank = register the person without a login (link one later)."""
+    return bool(form.get("username", "").strip() or form.get("password", ""))
+
+
+def _people_action(work, ok_message):
+    """Run work() as one transaction and show its error instead of a 500 page."""
+    try:
+        work()
+        db.session.commit()
+        flash(ok_message)
+    except ValueError as e:
+        db.session.rollback()
+        flash(str(e))
+    except IntegrityError:
+        db.session.rollback()
+        flash("That entry already exists (duplicate username or roll number).")
+    return redirect(url_for("main.people"))
+
+
+@bp.route("/people")
+@role_required("admin")
+def people():
+    return render_template("people.html",
+                           faculty=Faculty.query.order_by(Faculty.name).all(),
+                           students=Student.query.order_by(Student.roll_no).all(),
+                           groups=StudentGroup.query.order_by(StudentGroup.name).all(),
+                           users=User.query.order_by(User.role, User.username).all())
+
+
+@bp.route("/people/faculty", methods=["POST"])
+@role_required("admin")
+def add_faculty():
+    f = request.form
+    name = f.get("name", "").strip()
+
+    def work():
+        if not name:
+            raise ValueError("Name is required.")
+        fac = Faculty(name=name, email=f.get("email", "").strip() or None)
+        if _wants_login(f):
+            fac.user_id = _make_user(f.get("username"), f.get("password"), "faculty").id
+        db.session.add(fac)
+    return _people_action(work, f"Added faculty {name}.")
+
+
+@bp.route("/people/student", methods=["POST"])
+@role_required("admin")
+def add_student():
+    f = request.form
+    name, roll_no = f.get("name", "").strip(), f.get("roll_no", "").strip()
+
+    def work():
+        if not name or not roll_no:
+            raise ValueError("Name and roll number are required.")
+        gid = f.get("group_id", type=int)
+        group = db.session.get(StudentGroup, gid) if gid else None
+        if not group:
+            raise ValueError("Choose a student group (add groups under Setup first).")
+        student = Student(name=name, roll_no=roll_no, group_id=group.id)
+        if _wants_login(f):
+            student.user_id = _make_user(f.get("username"), f.get("password"), "student").id
+        db.session.add(student)
+    return _people_action(work, f"Added student {name}.")
+
+
+@bp.route("/people/admin", methods=["POST"])
+@role_required("admin")
+def add_admin():
+    f = request.form
+    return _people_action(lambda: _make_user(f.get("username"), f.get("password"), "admin"),
+                          f"Admin account '{f.get('username', '').strip()}' created.")
+
+
+@bp.route("/people/<kind>/<int:pid>/login", methods=["POST"])
+@role_required("admin")
+def add_login(kind, pid):
+    """Give an existing faculty/student record a login (this is what links them)."""
+    model = {"faculty": Faculty, "student": Student}.get(kind)
+    if model is None:
+        abort(404)
+    person = db.get_or_404(model, pid)
+    f = request.form
+
+    def work():
+        if person.user_id:
+            raise ValueError(f"{person.name} already has a login.")
+        person.user_id = _make_user(f.get("username"), f.get("password"), kind).id
+    return _people_action(work, f"Login created for {person.name}.")
+
+
+@bp.route("/users/<int:uid>/password", methods=["POST"])
+@role_required("admin")
+def reset_password(uid):
+    user = db.get_or_404(User, uid)
+
+    def work():
+        pw = request.form.get("password", "")
+        if len(pw) < 6:
+            raise ValueError("Password must be at least 6 characters.")
+        user.set_password(pw)
+    return _people_action(work, f"Password changed for {user.username}.")
