@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block body %}
+<h2>Move {{ alloc.section.course.code }} / {{ alloc.section.group_name }}</h2>
+<p>Now: <b>{{ alloc.room.name }}</b>, {{ alloc.slot.label }}. Pick a free room and slot below; only options that break
+  no rule are shown.</p>
+<form method="post">
+  <table>
+    <tr>
+      <th>Period</th>{% for d in days %}<th>{{ d }}</th>{% endfor %}
+    </tr>
+    {% for p in periods %}<tr>
+      <th>P{{ p }}<br><small>{{ times[p] }}</small></th>
+      {% for d in range(days|length) %}<td>
+        {% set slot = slot_at.get((p, d)) %}
+        {% for r in options.get((p, d), []) %}
+        {% if r.id == alloc.room_id and slot.id == alloc.slot_id %}<b>{{ r.name }} (current)</b>
+        {% else %}<button name="target" value="{{ r.id }}-{{ slot.id }}">{{ r.name }}</button>{% endif %}
+        {% else %}<span style="color:#999">-</span>{% endfor %}
+      </td>{% endfor %}
+    </tr>{% endfor %}
+  </table>
+</form>
+<p><a href="{{ url_for('main.my_timetable' if current_user.role == 'faculty' else 'main.index') }}">Back</a></p>
+{% endblock %}

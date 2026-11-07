@@ -14,16 +14,16 @@ pytest                  # run tests
 ```
 app/
   __init__.py        app factory
-  models.py          SQLAlchemy models
-  admin.py           setup screens (courses, faculty, rooms, slots, sections, availability)
-  routes.py          login, timetable view, generate, conflicts, publish
+  models.py          models (adds StudentGroup, Student, user links, unique constraints)
+  admin.py           setup screens (+ student groups)
+  routes.py          login, timetable (admin), /my (teacher/student), /rooms, /move, generate, conflicts, publish
   scheduler/
-    solver.py        CP-SAT generation (hard constraints + objective)
-    conflicts.py     conflict detection (also used after manual edits)
-  templates/
-config.py  seed.py  run.py
-tests/
-docs/CODING_PLAN.md
+    __init__.py      exports check_move, find_conflicts, generate_timetable
+    solver.py        CP-SAT generation
+    conflicts.py     conflict detection + check_move (validates one move)
+  templates/         + my_timetable.html, rooms.html, move.html
+migrate_v2.py        one-off migration from the v1 schema
+debug_check.py       read-only database integrity check
 ```
 
 ## Project overview

@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% block body %}
+<h2>{{ title }}</h2>
+{% if not linked %}
+<p>Your login is not linked to a {{ 'faculty' if is_faculty else 'student' }} record yet. Ask the administrator to link
+  it.</p>
+{% else %}
+{% if not grid %}<p>No published classes yet.</p>{% endif %}
+<table>
+  <tr>
+    <th>Period</th>{% for d in days %}<th>{{ d }}</th>{% endfor %}
+  </tr>
+  {% for p in periods %}<tr>
+    <th>P{{ p }}<br><small>{{ times[p] }}</small></th>
+    {% for d in range(days|length) %}<td>
+      {% for a in grid.get((p, d), []) %}
+      <div><b>{{ a.section.course.code }}</b>
+        {% if is_faculty %}{{ a.section.group_name }}{% else %}{{ a.section.faculty.name }}{% endif %}<br>
+        {{ a.room.name }}{% if is_faculty %} · <a href="{{ url_for('main.move', alloc_id=a.id) }}">Move</a>{% endif %}
+      </div>
+      {% endfor %}
+    </td>{% endfor %}
+  </tr>{% endfor %}
+</table>
+{% if is_faculty %}<p><small>Use <b>Move</b> to see every free room and slot this class can go to.</small></p>{% endif
+%}
+{% endif %}
+{% endblock %}

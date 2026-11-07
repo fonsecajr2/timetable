@@ -5,8 +5,9 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, u
 from sqlalchemy.exc import IntegrityError
 
 from .extensions import db
+# imports: add Student, StudentGroup
 from .models import (DAYS, Allocation, Course, Faculty, FacultyUnavailability, Room,
-                     Section, TimeSlot)
+                     Section, Student, StudentGroup, TimeSlot)
 from .routes import role_required
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -15,6 +16,10 @@ ROOM_TYPES = [("lecture", "Lecture"), ("lab", "Lab")]
 DEFAULT_PERIODS = [("09:00", "09:55"), ("10:00", "10:55"), ("11:15", "12:10"),
                    ("12:15", "13:10"), ("14:00", "14:55"), ("15:00", "15:55")]
 
+
+def _groups():
+    return [(g.id, f"{g.name} ({g.strength} students)")
+            for g in StudentGroup.query.order_by(StudentGroup.name)]
 
 def _courses():
     return [(c.id, f"{c.code} - {c.name}") for c in Course.query.order_by(Course.code)]
@@ -67,7 +72,7 @@ ENTITIES = {
         model=Section, title="Sections (class offerings)", order=Section.id,
         fields=[F("course_id", "Course", "select_int", _courses),
                 F("faculty_id", "Faculty", "select_int", _faculty),
-                F("group_name", "Student group (e.g. CSE-3A)"),
+                F("group_id", "Student group", "select_int", _groups),
                 F("strength", "Number of students", "int")],
         columns=[("Course", lambda o: f"{o.course.code} - {o.course.name}"),
                  ("Faculty", lambda o: o.faculty.name), ("Group", lambda o: o.group_name),
@@ -80,8 +85,13 @@ ENTITIES = {
         columns=[("Faculty", lambda o: db.session.get(Faculty, o.faculty_id).name),
                  ("Slot", lambda o: db.session.get(TimeSlot, o.slot_id).label)],
         deps=[]),
-}
-
+        # new entity in ENTITIES
+    "groups": dict(
+        model=StudentGroup, title="Student groups", order=StudentGroup.name,
+        fields=[F("name", "Group name (e.g. CSE-3A)"), F("strength", "Number of students", "int")],
+        columns=[("Group", lambda o: o.name), ("Students", lambda o: o.strength)],
+        deps=[(Section, "group_id"), (Student, "group_id")]),
+  }
 
 def _entity(name):
     ent = ENTITIES.get(name)

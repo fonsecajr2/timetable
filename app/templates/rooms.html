@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% block body %}
+<h2>Room timetable</h2>
+{% if not room %}<p>No rooms have been added yet.</p>{% else %}
+<form method="get">
+  <label>Room
+    <select name="room" onchange="this.form.submit()">
+      {% for r in rooms %}<option value="{{ r.id }}" {{ 'selected' if r.id==room.id }}>{{ r.name }}</option>{% endfor %}
+    </select>
+  </label>
+  <noscript><button>Show</button></noscript>
+</form>
+<p><b>{{ room.name }}</b> · {{ room.room_type }} · capacity {{ room.capacity }} · {{ free }} of {{ total }} slots free
+</p>
+<table>
+  <tr>
+    <th>Period</th>{% for d in days %}<th>{{ d }}</th>{% endfor %}
+  </tr>
+  {% for p in periods %}<tr>
+    <th>P{{ p }}<br><small>{{ times[p] }}</small></th>
+    {% for d in range(days|length) %}<td>
+      {% set a = occupied.get((p, d)) %}
+      {% if a %}
+      {% if a.published or current_user.role == 'admin' %}
+      <b>{{ a.section.course.code }}</b> {{ a.section.group_name }}<br>{{ a.section.faculty.name }}
+      {% else %}<i>Reserved</i>{% endif %}
+      {% else %}<span style="color:green">Free</span>{% endif %}
+    </td>{% endfor %}
+  </tr>{% endfor %}
+</table>
+{% endif %}
+{% endblock %}

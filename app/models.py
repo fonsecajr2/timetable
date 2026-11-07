@@ -1,10 +1,23 @@
+import sqlite3
+
 from flask_login import UserMixin
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from .extensions import db, login_manager
 
 ROLES = ("admin", "faculty", "student")
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+
+
+@event.listens_for(Engine, "connect")
+def _enforce_sqlite_foreign_keys(dbapi_connection, _record):
+    """SQLite ignores foreign keys unless asked, so deletes could leave orphan rows."""
+    if isinstance(dbapi_connection, sqlite3.Connection):
+        cur = dbapi_connection.cursor()
+        cur.execute("PRAGMA foreign_keys=ON")
+        cur.close()
 
 
 class User(UserMixin, db.Model):
@@ -37,6 +50,9 @@ class Faculty(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
     email = db.Column(db.String(128))
+    # login account of this teacher (None until linked); used by "my timetable"
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), unique=True)
+    user = db.relationship("User")
 
 
 class Room(db.Model):
@@ -59,22 +75,51 @@ class TimeSlot(db.Model):
         return f"{DAYS[self.day]} P{self.period} ({self.start}-{self.end})"
 
 
+class StudentGroup(db.Model):
+    """One cohort (e.g. CSE-3A). Its size lives here, once, not on every section."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), unique=True, nullable=False)
+    strength = db.Column(db.Integer, nullable=False)
+
+
+class Student(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    roll_no = db.Column(db.String(32), unique=True, nullable=False)
+    name = db.Column(db.String(128), nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey("student_group.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), unique=True)
+    group = db.relationship("StudentGroup")
+    user = db.relationship("User")
+
+
 class Section(db.Model):
     """A course offered to a student group, taught by one faculty member."""
 
     id = db.Column(db.Integer, primary_key=True)
     course_id = db.Column(db.Integer, db.ForeignKey("course.id"), nullable=False)
     faculty_id = db.Column(db.Integer, db.ForeignKey("faculty.id"), nullable=False)
-    group_name = db.Column(db.String(32), nullable=False)  # e.g. "CSE-3A"
-    strength = db.Column(db.Integer, nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey("student_group.id"), nullable=False)
     course = db.relationship("Course")
     faculty = db.relationship("Faculty")
+    group = db.relationship("StudentGroup")
+    __table_args__ = (db.UniqueConstraint("course_id", "group_id"),)
+
+    # Read-only shortcuts so the solver and conflict code keep working unchanged.
+    @property
+    def group_name(self):
+        return self.group.name
+
+    @property
+    def strength(self):
+        return self.group.strength
 
 
 class FacultyUnavailability(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     faculty_id = db.Column(db.Integer, db.ForeignKey("faculty.id"), nullable=False)
     slot_id = db.Column(db.Integer, db.ForeignKey("time_slot.id"), nullable=False)
+    __table_args__ = (db.UniqueConstraint("faculty_id", "slot_id"),)
 
 
 class Allocation(db.Model):
@@ -87,3 +132,6 @@ class Allocation(db.Model):
     section = db.relationship("Section")
     room = db.relationship("Room")
     slot = db.relationship("TimeSlot")
+    # a room can host only one class per slot (also protects against two teachers
+    # grabbing the same free room at the same moment)
+    __table_args__ = (db.UniqueConstraint("room_id", "slot_id"),)
