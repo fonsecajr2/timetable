@@ -40,7 +40,7 @@ def F(name, label, kind="text", choices=None, required=True, min=1, max=None):
 
 ENTITIES = {
     "courses": dict(
-        model=Course, title="Courses", order=Course.code,
+        model=Course, title="Courses", label="Courses", order=Course.code,
         fields=[F("code", "Code (e.g. CS101)"), F("name", "Course name"),
                 F("weekly_sessions", "Sessions per week", "int", max=5),
                 F("room_type", "Room type", "select", ROOM_TYPES)],
@@ -49,20 +49,20 @@ ENTITIES = {
                  ("Room type", lambda o: o.room_type)],
         deps=[(Section, "course_id")]),
     "faculty": dict(
-        model=Faculty, title="Faculty", order=Faculty.name,
+        model=Faculty, title="Faculty", label="Faculty", order=Faculty.name,
         fields=[F("name", "Name"), F("email", "Email", required=False)],
         columns=[("Name", lambda o: o.name), ("Email", lambda o: o.email or ""),
                  ("Login", lambda o: o.user.username if o.user else "-")],
         deps=[(Section, "faculty_id"), (FacultyUnavailability, "faculty_id")]),
     "rooms": dict(
-        model=Room, title="Rooms", order=Room.name,
+        model=Room, title="Rooms", label="Rooms", order=Room.name,
         fields=[F("name", "Room name"), F("capacity", "Capacity", "int"),
                 F("room_type", "Room type", "select", ROOM_TYPES)],
         columns=[("Room", lambda o: o.name), ("Capacity", lambda o: o.capacity),
                  ("Type", lambda o: o.room_type)],
         deps=[(Allocation, "room_id")]),
     "slots": dict(
-        model=TimeSlot, title="Time slots", order=(TimeSlot.day, TimeSlot.period),
+        model=TimeSlot, title="Time slots", label="Time slots", order=(TimeSlot.day, TimeSlot.period),
         fields=[F("day", "Day", "select_int", list(enumerate(DAYS))),
                 F("period", "Period number", "int"),
                 F("start", "Start (HH:MM)", "time"), F("end", "End (HH:MM)", "time")],
@@ -70,12 +70,12 @@ ENTITIES = {
                  ("Start", lambda o: o.start), ("End", lambda o: o.end)],
         deps=[(Allocation, "slot_id"), (FacultyUnavailability, "slot_id")]),
     "groups": dict(
-        model=StudentGroup, title="Student groups", order=StudentGroup.name,
+        model=StudentGroup, title="Student groups", label="Groups", order=StudentGroup.name,
         fields=[F("name", "Group name (e.g. CSE-3A)"), F("strength", "Number of students", "int")],
         columns=[("Group", lambda o: o.name), ("Students", lambda o: o.strength)],
         deps=[(Section, "group_id"), (Student, "group_id")]),
     "sections": dict(
-        model=Section, title="Sections (class offerings)", order=Section.id,
+        model=Section, title="Sections (class offerings)", label="Sections", order=Section.id,
         fields=[F("course_id", "Course", "select_int", _courses),
                 F("faculty_id", "Faculty", "select_int", _faculty),
                 F("group_id", "Student group", "select_int", _groups)],
@@ -84,13 +84,19 @@ ENTITIES = {
                  ("Students", lambda o: o.strength)],
         deps=[(Allocation, "section_id")]),
     "availability": dict(
-        model=FacultyUnavailability, title="Faculty unavailability", order=FacultyUnavailability.id,
+        model=FacultyUnavailability, title="Faculty unavailability", label="Faculty unavailability", order=FacultyUnavailability.id,
         fields=[F("faculty_id", "Faculty", "select_int", _faculty),
                 F("slot_id", "Unavailable at", "select_int", _slots)],
         columns=[("Faculty", lambda o: db.session.get(Faculty, o.faculty_id).name),
                  ("Slot", lambda o: db.session.get(TimeSlot, o.slot_id).label)],
         deps=[]),
 }
+
+
+@admin_bp.app_context_processor
+def _setup_links():
+    """The Setup row of the nav is built from ENTITIES, so it can never drift from the screens."""
+    return {"setup_links": [(key, ent["label"]) for key, ent in ENTITIES.items()]}
 
 
 def _entity(name):

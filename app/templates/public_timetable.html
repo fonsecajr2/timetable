@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% block body %}
+<h2>Class timetable</h2>
+{% include "public_picker.html" %}
+{% if not_found %}
+<p>That class was not found. Please pick one from the list.</p>
+{% elif group %}
+<h3>{{ group.name }}</h3>
+{% if not grid %}<p>No published classes yet for {{ group.name }}.</p>{% else %}
+<table>
+  <tr>
+    <th>Period</th>{% for d in days %}<th>{{ d }}</th>{% endfor %}
+  </tr>
+  {% for p in periods %}<tr>
+    <th>P{{ p }}<br><small>{{ times[p] }}</small></th>
+    {% for d in range(days|length) %}<td>
+      {% for a in grid.get((p, d), []) %}
+      <div><b>{{ a.section.course.code }}</b> {{ a.section.course.name }}<br>{{ a.section.faculty.name }}<br>{{
+        a.room.name }}</div>
+      {% endfor %}
+    </td>{% endfor %}
+  </tr>{% endfor %}
+</table>
+{% endif %}
+{% endif %}
+<p><a href="{{ url_for('main.login') }}">Staff / student login</a></p>
+{% endblock %}

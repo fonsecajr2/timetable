@@ -1,0 +1,27 @@
+{# One navigation block for every role. In base.html, delete the old nav and put: {% include "nav.html" %} #}
+{% if current_user.is_authenticated %}
+<nav>
+  {% if current_user.role == 'admin' %}
+  <a href="{{ url_for('main.index') }}">Timetable</a>
+  <a href="{{ url_for('main.conflicts') }}">Conflicts</a>
+  <a href="{{ url_for('main.room_timetable') }}">Room availability</a>
+  <a href="{{ url_for('main.people') }}">People</a>
+  <form method="post" action="{{ url_for('main.generate') }}" style="display:inline"
+    onsubmit="return confirm('Regenerate? Classes that are not locked will be replaced.')"><button>Generate</button>
+  </form>
+  <form method="post" action="{{ url_for('main.publish') }}" style="display:inline"><button>Publish</button></form>
+  {% else %}
+  <a href="{{ url_for('main.my_timetable') }}">My timetable</a>
+  <a href="{{ url_for('main.room_timetable') }}">Room availability</a>
+  {% endif %}
+  <span style="float:right">{{ current_user.username }} ({{ current_user.role }}) &middot;
+    <a href="{{ url_for('main.logout') }}">Logout</a></span>
+  {% if current_user.role == 'admin' %}
+  <div style="font-size:.9em;margin-top:.4rem"><b>Setup:</b>
+    {% for key, label in setup_links %}<a href="{{ url_for('admin.manage', name=key) }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</nav>
+<hr>
+{% endif %}

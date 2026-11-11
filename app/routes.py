@@ -68,13 +68,33 @@ def login():
             login_user(user)
             return redirect(url_for("main.index"))
         flash("Invalid credentials")
-    return render_template("login.html")
+    return render_template("login.html",
+                           groups=StudentGroup.query.order_by(StudentGroup.name).all())
 
 
 @bp.route("/logout")
 def logout():
     logout_user()
     return redirect(url_for("main.login"))
+
+
+@bp.route("/timetable")
+def public_timetable():
+    """Published timetable of one student group. Public: no login needed."""
+    groups = StudentGroup.query.order_by(StudentGroup.name).all()
+    group_id = request.args.get("group", type=int)
+    group = next((g for g in groups if g.id == group_id), None)
+    grid, times, periods = {}, {}, []
+    if group:
+        allocs = (_allocations().join(Allocation.section)
+                  .filter(Section.group_id == group.id, Allocation.published.is_(True)).all())
+        slots, times = _slot_info()
+        periods = sorted({s.period for s in slots})
+        grid = _grid(allocs)
+    page = render_template("public_timetable.html", groups=groups, group=group,
+                           not_found=group_id is not None and group is None,
+                           days=DAYS, periods=periods, times=times, grid=grid)
+    return (page, 404) if group_id is not None and group is None else page
 
 
 # ------------------------------------------------------------------------- timetables

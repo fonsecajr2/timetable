@@ -1,0 +1,13 @@
+{# Class picker. Include it in login.html and in public_timetable.html. Needs: groups (optional: group) #}
+{% if groups %}
+<form method="get" action="{{ url_for('main.public_timetable') }}" class="f">
+  <label>View a class timetable (no login needed)
+    <select name="group" required>
+      <option value="">Select your class...</option>
+      {% for g in groups %}<option value="{{ g.id }}" {{ 'selected' if group is defined and group and g.id==group.id }}>
+        {{ g.name }}</option>{% endfor %}
+    </select>
+  </label>
+  <button>Show timetable</button>
+</form>
+{% endif %}
