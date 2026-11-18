@@ -4,3 +4,6 @@ __pycache__/
 instance/
 *.db
 .pytest_cache/
+build_srs.py
+*.docx
+
