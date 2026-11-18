@@ -1,4 +1,5 @@
 {% extends "base.html" %}{% block body %}
+{% from "_cell.html" import alloc_cell %}
 <h2>Weekly Timetable</h2>
 {% if not grid %}<p>No timetable yet.{% if current_user.role == 'admin' %} Add courses, faculty, rooms, time slots and
   sections under <b>Setup</b>, then press <b>Generate</b>.{% else %} It has not been published yet.{% endif %}</p>{%
@@ -11,9 +12,7 @@ endif %}
     <th>P{{ p }}</th>
     {% for d in range(days|length) %}<td>
       {% for a in grid.get((p, d), []) %}
-      <div><b>{{ a.section.course.code }}</b> {{ a.section.group_name }}<br>{{ a.section.faculty.name }} · {{
-        a.room.name }}{% if current_user.role == 'admin' %} · <a
-          href="{{ url_for('main.move', alloc_id=a.id) }}">Move</a>{% endif %}</div>
+        {{ alloc_cell(a, current_user.role == 'admin') }}
       {% endfor %}
     </td>{% endfor %}
   </tr>{% endfor %}

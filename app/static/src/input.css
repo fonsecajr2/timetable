@@ -138,4 +138,74 @@
   .badge-err {
     @apply bg-red-100 text-red-700;
   }
+
+    .cell {
+      border-left: 3px solid #d8dbe0;
+      padding: 2px 0 2px 8px;
+      margin-bottom: 8px;
+    }
+  
+    .cell.is-locked {
+      border-left-color: #1f2937;
+    }
+  
+    .cell-title {
+      font-weight: 600;
+    }
+  
+    .cell-title span {
+      font-weight: 400;
+      color: #555;
+    }
+  
+    .cell-meta {
+      font-size: .85em;
+      color: #666;
+    }
+  
+    .cell-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 3px;
+      font-size: .8em;
+    }
+  
+    .cell-actions form {
+      display: inline;
+      margin: 0;
+    }
+  
+    /* two classes in the selector so it beats the global `button` rule */
+    .cell-actions .lock-btn {
+      all: unset;
+      /* wipes the purple block style */
+      box-sizing: border-box;
+      cursor: pointer;
+      padding: 1px 8px;
+      font-size: .85em;
+      line-height: 1.5;
+      color: #4b5563;
+      border: 1px solid #cbd0d6;
+      border-radius: 4px;
+    }
+  
+    .cell-actions .lock-btn:hover {
+      background: #eef0f3;
+    }
+  
+    .cell-actions .lock-btn:focus-visible {
+      outline: 2px solid #6366f1;
+      outline-offset: 1px;
+    }
+  
+    .is-locked .lock-btn {
+      background: #1f2937;
+      border-color: #1f2937;
+      color: #fff;
+    }
+  
+    .is-locked .lock-btn:hover {
+      background: #374151;
+    }
 }

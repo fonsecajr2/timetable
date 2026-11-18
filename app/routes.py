@@ -59,6 +59,18 @@ def _current_faculty():
     return Faculty.query.filter_by(user_id=current_user.id).first()
 
 
+@bp.app_context_processor
+def inject_lock_counts():
+    """Makes `locked_count` and `alloc_count` available in EVERY template (nav.html
+    included), so the Generate button can say how many classes will stay in place."""
+    if current_user.is_authenticated and current_user.role == "admin":
+        return {
+            "locked_count": Allocation.query.filter_by(locked=True).count(),
+            "alloc_count": Allocation.query.count(),
+        }
+    return {}
+
+
 # ------------------------------------------------------------------------------- auth
 @bp.route("/login", methods=["GET", "POST"])
 def login():
@@ -158,7 +170,7 @@ def room_timetable():
 
 # ------------------------------------------------------------------------------ moving
 def _movable_allocation(alloc_id):
-    """Admin may move any class; a teacher only their own."""
+    """Admin may move/lock any class; a teacher only their own."""
     alloc = db.get_or_404(Allocation, alloc_id)
     if current_user.role == "faculty":
         owner = _current_faculty()
@@ -213,6 +225,20 @@ def move(alloc_id):
     return render_template("move.html", alloc=alloc, days=DAYS,
                            periods=sorted({s.period for s in slots}), times=times,
                            options=options, slot_at=slot_at)
+
+
+@bp.route("/lock/<int:alloc_id>", methods=["POST"])
+@role_required("admin", "faculty")
+def toggle_lock(alloc_id):
+    """Lock or unlock one class. A locked class stays where it is when the admin
+    presses Generate. Admin can toggle any class; a teacher only their own."""
+    alloc = _movable_allocation(alloc_id)  # also enforces the faculty ownership check
+    alloc.locked = not alloc.locked
+    db.session.commit()
+    flash(f"{alloc.section.course.code}/{alloc.section.group_name} "
+          f"{'locked' if alloc.locked else 'unlocked'}.")
+    return redirect(url_for("main.my_timetable" if current_user.role == "faculty"
+                            else "main.index"))
 
 
 # ------------------------------------------------------------------------------- admin

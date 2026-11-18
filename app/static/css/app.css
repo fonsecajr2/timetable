@@ -24,7 +24,6 @@
     --color-slate-700: oklch(37.2% 0.044 257.287);
     --color-slate-800: oklch(27.9% 0.041 260.031);
     --color-slate-900: oklch(20.8% 0.042 265.755);
-    --color-neutral-200: oklch(92.2% 0 none);
     --color-white: #fff;
     --spacing: 0.25rem;
     --breakpoint-2xl: 96rem;
@@ -637,6 +636,62 @@
   .badge-err {
     background-color: var(--color-red-100);
     color: var(--color-red-700);
+  }
+  .cell {
+    border-left: 3px solid #d8dbe0;
+    padding: 2px 0 2px 8px;
+    margin-bottom: 8px;
+  }
+  .cell.is-locked {
+    border-left-color: #1f2937;
+  }
+  .cell-title {
+    font-weight: 600;
+  }
+  .cell-title span {
+    font-weight: 400;
+    color: #555;
+  }
+  .cell-meta {
+    font-size: .85em;
+    color: #666;
+  }
+  .cell-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3px;
+    font-size: .8em;
+  }
+  .cell-actions form {
+    display: inline;
+    margin: 0;
+  }
+  .cell-actions .lock-btn {
+    all: unset;
+    box-sizing: border-box;
+    cursor: pointer;
+    padding: 1px 8px;
+    font-size: .85em;
+    line-height: 1.5;
+    color: #4b5563;
+    border: 1px solid #cbd0d6;
+    border-radius: 4px;
+  }
+  .cell-actions .lock-btn:hover {
+    background: #eef0f3;
+  }
+  .cell-actions .lock-btn:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 1px;
+  }
+  .is-locked .lock-btn {
+    background: #1f2937;
+    border-color: #1f2937;
+    color: #fff;
+  }
+  .is-locked .lock-btn:hover {
+    background: #374151;
   }
 }
 @property --tw-border-style {

@@ -6,8 +6,9 @@
   <a href="{{ url_for('main.conflicts') }}">Conflicts</a>
   <a href="{{ url_for('main.room_timetable') }}">Room availability</a>
   <a href="{{ url_for('main.people') }}">People</a>
-  <form method="post" action="{{ url_for('main.generate') }}" style="display:inline"
-    onsubmit="return confirm('Regenerate? Classes that are not locked will be replaced.')"><button>Generate</button>
+  <form method="post" action="{{ url_for('main.generate') }}"
+    onsubmit="return confirm('{{ locked_count|default(0) }} of {{ alloc_count|default(0) }} class(es) are locked and will stay in place. All other classes will be re-shifted, including published ones. Continue?')">
+    <button>Generate</button>
   </form>
   <form method="post" action="{{ url_for('main.publish') }}" style="display:inline"><button>Publish</button></form>
   {% else %}

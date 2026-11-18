@@ -1,0 +1,17 @@
+{% macro alloc_cell(a, can_edit) %}
+<div class="cell{{ ' is-locked' if a.locked }}">
+  <div class="cell-title">{{ a.section.course.code }} <span>{{ a.section.group_name }}</span></div>
+  <div class="cell-meta">{{ a.section.faculty.name }} · {{ a.room.name }}</div>
+
+  {% if can_edit %}
+  <div class="cell-actions">
+    <a href="{{ url_for('main.move', alloc_id=a.id) }}">Move</a>
+    <form method="post" action="{{ url_for('main.toggle_lock', alloc_id=a.id) }}">
+      <button type="submit" class="lock-btn"
+        title="{{ 'Locked: stays put when generating. Click to unlock' if a.locked else 'Click to keep this class in place when generating' }}"
+        aria-pressed="{{ 'true' if a.locked else 'false' }}">{{ 'Unlock' if a.locked else 'Lock' }}</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
