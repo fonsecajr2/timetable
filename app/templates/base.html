@@ -1,48 +1,46 @@
 <!doctype html>
-<title>Timetable System</title>
-<style>
-  body {
-    font-family: system-ui, sans-serif;
-    margin: 2rem;
-    color: #222
-  }
+<html lang="en" class="h-full">
 
-  table {
-    border-collapse: collapse;
-    width: 100%
-  }
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Timetable System{% endblock %}</title>
 
-  td,
-  th {
-    border: 1px solid #ccc;
-    padding: 6px;
-    vertical-align: top;
-    font-size: .85rem
-  }
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  th {
-    background: #f3f3f3
-  }
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  {% block head %}{% endblock %}
+</head>
 
-  nav a,
-  nav button {
-    margin-right: 1rem
-  }
+<body class="min-h-full">
+  <header class="sticky top-0 z-20 border-b border-slate-800 bg-slate-900 shadow-md">
+    <div class="mx-auto flex max-w-screen-2xl items-center gap-6 px-6">
+      <a href="/" class="py-3 text-lg font-bold tracking-tight text-white">Timetable</a>
+      {% include "nav.html" %}
+    </div>
+  </header>
 
-  form.f {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    align-items: end;
-    margin-bottom: 1rem
-  }
+  <main class="mx-auto max-w-screen-2xl px-6 py-6">
+    {% for category, m in get_flashed_messages(with_categories=true) %}
+    <div class="mb-3 rounded-md border px-4 py-2 text-sm font-medium
+        {% if category == 'error' or category == 'danger' %}border-red-200 bg-red-50 text-red-700
+        {% else %}border-brand-100 bg-brand-50 text-brand-700{% endif %}">
+      {{ m }}
+    </div>
+    {% endfor %}
 
-  form.f label {
-    display: flex;
-    flex-direction: column;
-    font-size: .85rem
-  }
-</style>
-{% include "nav.html" %}
-{% for m in get_flashed_messages() %}<p><b>{{ m }}</b></p>{% endfor %}
-{% block body %}{% endblock %}
+    {% block body %}{% endblock %}
+  </main>
+
+  <script>
+    // Highlights the nav button of the page you are on (no changes needed in nav.html)
+    document.querySelectorAll('header nav a[href]').forEach(function (a) {
+      if (new URL(a.href).pathname === location.pathname) a.setAttribute('aria-current', 'page');
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+
+</html>

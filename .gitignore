@@ -6,4 +6,5 @@ instance/
 .pytest_cache/
 build_srs.py
 *.docx
-
+node_modules/
+package-lock.json

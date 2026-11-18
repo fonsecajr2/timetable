@@ -1,0 +1,28 @@
+{
+  "name": "timetable",
+  "version": "1.0.0",
+  "description": "```bash python -m venv .venv && source .venv/bin/activate   # Windows: .venv\\Scripts\\activate pip install -r requirements.txt python create_admin.py  # empty database + logins (use this to enter your own data) # or: python seed.py    # demo data + users (admin/admin123, faculty/faculty123, student/student123) python run.py           # http://127.0.0.1:5000 pytest                  # run tests ```",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fonsecajr2/timetable.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fonsecajr2/timetable/issues"
+  },
+  "homepage": "https://github.com/fonsecajr2/timetable#readme",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.5",
+    "tailwindcss": "^4.3.5"
+  }
+}

@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+/* where Tailwind looks for class names (relative to this file) */
+@source "../../templates";
+
+/* ---------- Design tokens ---------- */
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+}
+
+/* ---------- Base: plain HTML elements ---------- */
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased;
+  }
+
+  h1 {
+    @apply text-2xl font-semibold tracking-tight mb-4;
+  }
+
+  h2 {
+    @apply text-lg font-semibold mb-3;
+  }
+
+  h3 {
+    @apply text-base font-semibold mb-2;
+  }
+
+  main a:not(.btn) {
+    @apply text-brand-600 hover:text-brand-700 hover:underline;
+  }
+
+  table {
+    @apply w-full border-collapse bg-white text-sm shadow-xs;
+  }
+
+  th {
+    @apply bg-slate-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-600 border border-slate-200 px-3 py-2;
+  }
+
+  td {
+    @apply border border-slate-200 px-3 py-2 align-top;
+  }
+
+  tbody tr:hover td {
+    @apply bg-slate-50;
+  }
+
+  input:not([type=checkbox]):not([type=radio]):not([type=submit]),
+  select,
+  textarea {
+    @apply rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm focus:outline-hidden focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30;
+  }
+
+  main button,
+  main input[type=submit] {
+    @apply inline-flex cursor-pointer items-center rounded-md bg-brand-600 px-3.5 py-1.5 text-sm font-medium text-white shadow-xs hover:bg-brand-700 focus:outline-hidden focus:ring-2 focus:ring-brand-500/40;
+  }
+
+  /* top nav (nav.html): high-contrast buttons on the dark header */
+  header {
+    @apply text-slate-100;
+  }
+
+  header nav {
+    @apply flex flex-wrap items-center gap-2 py-2.5;
+  }
+
+  header nav a,
+  header nav button,
+  header nav summary {
+    @apply inline-flex cursor-pointer list-none items-center rounded-md border border-slate-600 bg-slate-800 px-3.5 py-1.5 text-sm font-semibold text-white shadow-none transition-colors hover:border-brand-500 hover:bg-brand-600 focus-visible:ring-2 focus-visible:ring-white;
+  }
+
+  /* plain labels (e.g. "Setup", logged-in user name) */
+  header nav span {
+    @apply inline-flex items-center px-1 text-sm font-semibold text-slate-100;
+  }
+
+  /* spans inside buttons/links keep the button's colour */
+  header nav a span,
+  header nav button span,
+  header nav summary span {
+    @apply p-0 text-inherit;
+  }
+
+  /* current page */
+  header nav a[aria-current=page],
+  header nav a.active {
+    @apply border-brand-500 bg-brand-600;
+  }
+}
+
+/* ---------- Components ---------- */
+@layer components {
+  form.f {
+    @apply mb-4 flex flex-wrap items-end gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-xs;
+  }
+
+  form.f label {
+    @apply flex flex-col gap-1 text-sm font-medium text-slate-600;
+  }
+
+  .card {
+    @apply rounded-lg border border-slate-200 bg-white p-4 shadow-xs;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-slate-700 border border-slate-300 hover:bg-slate-50;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700;
+  }
+
+  .nav-chip {
+    @apply rounded-md bg-amber-300 px-3 py-1 text-sm font-semibold text-slate-900;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+
+  .badge-ok {
+    @apply bg-emerald-100 text-emerald-700;
+  }
+
+  .badge-warn {
+    @apply bg-amber-100 text-amber-800;
+  }
+
+  .badge-err {
+    @apply bg-red-100 text-red-700;
+  }
+}
